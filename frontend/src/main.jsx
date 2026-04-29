@@ -8,3 +8,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>
 );
+const API = "https://assignment1-3.onrender.com";
+
+fetch(`${API}/developers`)
