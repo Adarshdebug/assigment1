@@ -22,5 +22,12 @@ export default defineConfig({
         ".js": "jsx"
       }
     }
+  },
+  server: {
+    proxy: {
+      "/developers": "http://localhost:5000",
+      "/metrics": "http://localhost:5000",
+      "/manager-metrics": "http://localhost:5000"
+    }
   }
 });

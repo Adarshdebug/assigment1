@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {
+      "source": "/developers",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/metrics/:developerId",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/manager-metrics",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
