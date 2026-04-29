@@ -1,22 +1,11 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "frontend/dist",
-  "rewrites": [
+  "builds": [
     {
-      "source": "/developers",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/metrics/:developerId",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/manager-metrics",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ]
 }
