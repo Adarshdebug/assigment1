@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ManagerView from "./ManagerView";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE = "https://assignment1-2.onrender.com";
 
 const metricLabels = {
   leadTime: { label: "Lead Time", suffix: "days" },
@@ -11,60 +11,95 @@ const metricLabels = {
   prThroughput: { label: "PR Throughput", suffix: "merged PRs" }
 };
 
+function normalizeMetricData(data) {
+  if (data.metrics) {
+    return data;
+  }
+
+  return {
+    metrics: data,
+    insights: "",
+    suggestions: []
+  };
+}
+
 function App() {
   const [developers, setDevelopers] = useState([]);
   const [selectedDeveloperId, setSelectedDeveloperId] = useState("");
+  const [managerMetrics, setManagerMetrics] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
   const [activeView, setActiveView] = useState("developer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadDevelopers() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/developers`);
-
-        if (!response.ok) {
-          throw new Error("Could not load developers");
-        }
-
-        const data = await response.json();
-        setDevelopers(data);
-        setSelectedDeveloperId(data[0]?.id || "");
-      } catch (err) {
-        setError(err.message);
-      }
-    }
-
-    loadDevelopers();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedDeveloperId) return;
-
-    async function loadMetrics() {
+    async function loadData() {
       setLoading(true);
       setError("");
 
       try {
-        const response = await fetch(`${API_BASE_URL}/metrics/${selectedDeveloperId}`);
+        const [devRes, managerRes] = await Promise.all([
+          fetch(`${API_BASE}/developers`),
+          fetch(`${API_BASE}/manager-metrics`)
+        ]);
 
-        if (!response.ok) {
-          throw new Error("Could not load metrics for this developer");
+        if (!devRes.ok || !managerRes.ok) {
+          throw new Error("Failed to load data");
         }
 
-        const data = await response.json();
-        setDashboardData(data);
+        const developers = await devRes.json();
+        const managerMetrics = await managerRes.json();
+
+        setDevelopers(developers);
+        setManagerMetrics(managerMetrics);
+
+        if (developers.length > 0) {
+          const firstId = developers[0].id;
+          setSelectedDeveloperId(firstId);
+
+          const metricRes = await fetch(`${API_BASE}/metrics/${firstId}`);
+
+          if (!metricRes.ok) {
+            throw new Error("Failed to load metrics");
+          }
+
+          const metricData = await metricRes.json();
+          setDashboardData(normalizeMetricData(metricData));
+        }
       } catch (err) {
+        setDevelopers([]);
+        setManagerMetrics([]);
         setDashboardData(null);
-        setError(err.message);
+        setError("Could not load developers");
       } finally {
         setLoading(false);
       }
     }
 
-    loadMetrics();
-  }, [selectedDeveloperId]);
+    loadData();
+  }, []);
+
+  async function handleDeveloperChange(developerId) {
+    setSelectedDeveloperId(developerId);
+    setLoading(true);
+    setError("");
+
+    try {
+      const metricRes = await fetch(`${API_BASE}/metrics/${developerId}`);
+
+      if (!metricRes.ok) {
+        throw new Error("Failed to load metrics");
+      }
+
+      const metricData = await metricRes.json();
+      setDashboardData(normalizeMetricData(metricData));
+    } catch (err) {
+      setDashboardData(null);
+      setError("Could not load metrics for this developer");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <main className="page-shell">
@@ -97,7 +132,7 @@ function App() {
               Developer
               <select
                 value={selectedDeveloperId}
-                onChange={(event) => setSelectedDeveloperId(event.target.value)}
+                onChange={(event) => handleDeveloperChange(event.target.value)}
               >
                 {developers.map((developer) => (
                   <option key={developer.id} value={developer.id}>
@@ -110,7 +145,7 @@ function App() {
         </div>
       </section>
 
-      {activeView === "manager" && <ManagerView />}
+      {activeView === "manager" && <ManagerView managerMetrics={managerMetrics} />}
 
       {activeView === "developer" && loading && <p className="status-message">Loading dashboard data...</p>}
       {activeView === "developer" && error && <p className="error-message">{error}</p>}
