@@ -57,9 +57,9 @@ const metricsByDeveloper = {
   }
 };
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   const developerId = req.query.developerId || "dev-101";
   const dashboardData = metricsByDeveloper[developerId] || metricsByDeveloper["dev-101"];
 
   res.status(200).json(dashboardData);
-}
+};

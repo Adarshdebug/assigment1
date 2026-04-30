@@ -5,6 +5,6 @@ const developers = [
   { id: "dev-104", name: "Nisha Iyer", team: "Quality" }
 ];
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   res.status(200).json(developers);
-}
+};
