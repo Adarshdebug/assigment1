@@ -1,9 +1,6 @@
-const express = require("express");
-const metricsRouter = require("../backend/routes/metrics");
-
-const app = express();
-
-app.use(express.json());
-app.use("/", metricsRouter);
-
-module.exports = app;
+export default function handler(req, res) {
+  res.status(200).json({
+    message: "Developer Productivity Dashboard API",
+    routes: ["/api/developers", "/api/metrics", "/api/manager-metrics"]
+  });
+}
